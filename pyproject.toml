@@ -1,16 +1,16 @@
-[project]
+[tool.poetry]
 name = "mapproxy"
 version = "4.0.2-post"
 description = "MapProxy is an open source proxy for geospatial data."
 authors = []
-requires-python = ">= 3.12"
-dependencies = [ 
-    "PyYAML (>=3.0,<4.0)", 
-    "pyproj>=3", 
-    "jsonschema>=4", 
-    "werkzeug (>=3,<4)" 
-]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+PyYAML = "^3.0"
+pyproj = "^3"
+jsonschema = "^4"
+werkzeug = "^3"
 
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
