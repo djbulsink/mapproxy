@@ -11,6 +11,7 @@ pyproj = "^3"
 jsonschema = "^4"
 werkzeug = "^3"
 future = "^1.0.0"
+pillow = "^11.2.1"
 
 
 [build-system]
