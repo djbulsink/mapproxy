@@ -13,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+
 from mapproxy.client.http import retrieve_image
+from mapproxy.grid import TileCoord
+from mapproxy.grid.tile_grid import TileGrid
 from mapproxy.image import ImageResult
 
 
@@ -23,8 +27,13 @@ class TileClient(object):
         self.http_client = http_client
         self.grid = grid
 
-    def get_tile(self, tile_coord, format=None) -> ImageResult:
-        url = self.url_template.substitute(tile_coord, format, self.grid)
+    def get_tile(
+        self,
+        tile_coord: TileCoord,
+        grid: Optional[TileGrid]=None,
+        format: str=None
+    ) -> ImageResult:
+        url = self.url_template.substitute(tile_coord, format, grid or self.grid)
         if self.http_client:
             return self.http_client.open_image(url)
         else:
@@ -68,7 +77,7 @@ class TileURLTemplate(object):
         self.with_bbox = True if '%(bbox)' in template else False
         self.with_grid = True if '%(grid)' in template else False
 
-    def substitute(self, tile_coord, format=None, grid=None):
+    def substitute(self, tile_coord: TileCoord, grid: TileGrid, format: Optional[str]=None):
         x, y, z = tile_coord
         data = dict(x=x, y=y, z=z)
         data['format'] = format or self.format
@@ -83,7 +92,7 @@ class TileURLTemplate(object):
         if self.with_bbox:
             data['bbox'] = bbox(tile_coord, grid)
         if self.with_grid:
-            data['grid'] = grid
+            data['grid'] = grid.name
 
         return self.template % data
 

@@ -98,15 +98,15 @@ class TiledSource(MapLayer):
         if self.coverage and not self.coverage.intersects(query.bbox, query.srs):
             raise BlankImageError()
 
-        _bbox, grid, tiles = grid.get_affected_tiles(query.bbox, query.size)
+        _bbox, request_grid, tiles = grid.get_affected_tiles(query.bbox, query.size)
 
-        if grid != (1, 1):
+        if request_grid != (1, 1):
             raise InvalidSourceQuery('BBOX does not align to tile')
 
         tile_coord = next(tiles)
 
         try:
-            return self.client.get_tile(tile_coord, grid.name , format=query.format)
+            return self.client.get_tile(tile_coord=tile_coord, grid=grid, format=query.format)
         except HTTPClientError as e:
             if self.error_handler:
                 resp = self.error_handler.handle(e.response_code, query)
