@@ -19,7 +19,7 @@ from mapproxy.image import ImageResult
 
 class TileClient(object):
     def __init__(self, url_template, http_client=None, grid=None):
-        self.url_template = url_template
+        self.url_template: TileURLTemplate = url_template
         self.http_client = http_client
         self.grid = grid
 
@@ -66,6 +66,7 @@ class TileURLTemplate(object):
         self.with_tms_path = True if '%(tms_path)' in template else False
         self.with_arcgiscache_path = True if '%(arcgiscache_path)' in template else False
         self.with_bbox = True if '%(bbox)' in template else False
+        self.with_grid = True if '%(grid)' in template else False
 
     def substitute(self, tile_coord, format=None, grid=None):
         x, y, z = tile_coord
@@ -81,6 +82,8 @@ class TileURLTemplate(object):
             data['arcgiscache_path'] = arcgiscache_path(tile_coord)
         if self.with_bbox:
             data['bbox'] = bbox(tile_coord, grid)
+        if self.with_grid:
+            data['grid'] = grid
 
         return self.template % data
 

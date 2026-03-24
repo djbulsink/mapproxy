@@ -20,6 +20,8 @@ Retrieve tiles from different tile servers (TMS/TileCache/etc.).
 import sys
 from typing import Optional
 
+from mapproxy.client.tile import TileClient
+from mapproxy.grid.tile_grid import TileGrid
 from mapproxy.layer.cache_map_layer import CacheMapLayer
 from mapproxy.layer.map_layer import MapLayer
 from mapproxy.image import BaseImageResult
@@ -40,10 +42,19 @@ log_config = logging.getLogger('mapproxy.config')
 
 
 class TiledSource(MapLayer):
-    def __init__(self, grid, client, coverage: Optional[Coverage] = None, image_opts=None, error_handler=None,
-                 res_range=None):
+    def __init__(
+        self,
+        grid: Optional[TileGrid],
+        grids: Optional[list[TileGrid]],
+        client: TileClient,
+        coverage: Optional[Coverage],
+        image_opts=None,
+        error_handler=None,
+        res_range=None
+    ):
         super().__init__(image_opts=image_opts)
         self.grid = grid
+        self.grids = grids
         self.client = client
         self.image_opts = image_opts or ImageOptions()
         self.coverage = coverage
@@ -52,18 +63,31 @@ class TiledSource(MapLayer):
         self.error_handler = error_handler
 
     def get_map(self, query: MapQuery) -> BaseImageResult:
-        if self.grid.tile_size != query.size:
+        # Get grid for query
+        grid: Optional[TileGrid] = self.grid
+        for g in self.grids:
+            if g.srs == query.srs:
+                grid = g
+                break
+        if grid is None:
+            ex = InvalidSourceQuery(
+                'no grid with matching SRS for query: %r' % query.srs
+            )
+            log_config.error(ex)
+            raise ex
+        
+        if grid.tile_size != query.size:
             ex = InvalidSourceQuery(
                 'tile size of cache and tile source do not match: %s != %s'
-                % (self.grid.tile_size, query.size)
+                % (grid.tile_size, query.size)
             )
             log_config.error(ex)
             raise ex
 
-        if self.grid.srs != query.srs:
+        if grid.srs != query.srs:
             ex = InvalidSourceQuery(
                 'SRS of cache and tile source do not match: %r != %r'
-                % (self.grid.srs, query.srs)
+                % (grid.srs, query.srs)
             )
             log_config.error(ex)
             raise ex
@@ -74,7 +98,7 @@ class TiledSource(MapLayer):
         if self.coverage and not self.coverage.intersects(query.bbox, query.srs):
             raise BlankImageError()
 
-        _bbox, grid, tiles = self.grid.get_affected_tiles(query.bbox, query.size)
+        _bbox, grid, tiles = grid.get_affected_tiles(query.bbox, query.size)
 
         if grid != (1, 1):
             raise InvalidSourceQuery('BBOX does not align to tile')
@@ -82,7 +106,7 @@ class TiledSource(MapLayer):
         tile_coord = next(tiles)
 
         try:
-            return self.client.get_tile(tile_coord, format=query.format)
+            return self.client.get_tile(tile_coord, grid.name , format=query.format)
         except HTTPClientError as e:
             if self.error_handler:
                 resp = self.error_handler.handle(e.response_code, query)

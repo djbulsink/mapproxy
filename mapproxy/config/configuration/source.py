@@ -571,14 +571,24 @@ class TileSourceConfiguration(SourceConfiguration):
 
         http_client, url = self.http_client(url)
 
-        grid_name = self.conf.get('grid')
-        if grid_name is None:
-            log.warning(
-                "tile source for %s does not have a grid configured and defaults to GLOBAL_MERCATOR. default will"
-                " change with MapProxy 2.0", url)
-            grid_name = "GLOBAL_MERCATOR"
+        grid_names = self.conf.get('grids')
+        grids = None
+        grid = None
 
-        grid = self.context.grids[grid_name].tile_grid()
+        if not grid_names:
+            grid_name = self.conf.get('grid')
+            if grid_name is None:
+                log.warning(
+                    "tile source for %s does not have a grid configured and defaults to GLOBAL_MERCATOR. default will"
+                    " change with MapProxy 2.0", url)
+                grid_name = "GLOBAL_MERCATOR"
+
+            grid = self.context.grids[grid_name].tile_grid()
+        else:
+            grids = []
+            for grid_name in grid_names:
+                grids.append(self.context.grids[grid_name].tile_grid())
+        
         coverage = self.coverage()
         res_range = resolution_range(self.conf)
 
@@ -587,7 +597,7 @@ class TileSourceConfiguration(SourceConfiguration):
 
         format = file_ext(params['format'])
         client = TileClient(TileURLTemplate(url, format=format), http_client=http_client, grid=grid)
-        return TiledSource(grid, client, coverage=coverage, image_opts=image_opts,
+        return TiledSource(grid, grids, client, coverage=coverage, image_opts=image_opts,
                            error_handler=error_handler, res_range=res_range)
 
 
