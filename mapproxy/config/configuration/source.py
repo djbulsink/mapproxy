@@ -591,7 +591,7 @@ class TileSourceConfiguration(SourceConfiguration):
         error_handler = self.on_error_handler()
 
         format = file_ext(params['format'])
-        client = TileClient(TileURLTemplate(url, format=format), http_client=http_client, grid=grid)
+        client = TileClient(TileURLTemplate(url, format=format), http_client=http_client)
         return TiledSource(
             grid=grid,
             grids=grids,

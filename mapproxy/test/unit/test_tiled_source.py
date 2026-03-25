@@ -36,7 +36,7 @@ class TestTileClientOnError(object):
     def test_cacheable_response(self):
         error_handler = HTTPSourceErrorHandler()
         error_handler.add_handler(500, (255, 0, 0), cacheable=True)
-        self.source = TiledSource(self.grid, self.client, error_handler=error_handler)
+        self.source = TiledSource(client=self.client, grid=self.grid, error_handler=error_handler)
 
         with mock_httpd(
             TEST_SERVER_ADDRESS,
@@ -60,7 +60,7 @@ class TestTileClientOnError(object):
     def test_image_response(self):
         error_handler = HTTPSourceErrorHandler()
         error_handler.add_handler(500, (255, 0, 0), cacheable=False)
-        self.source = TiledSource(self.grid, self.client, error_handler=error_handler)
+        self.source = TiledSource(client=self.client, grid=self.grid, error_handler=error_handler)
 
         with mock_httpd(
             TEST_SERVER_ADDRESS,
@@ -85,7 +85,7 @@ class TestTileClientOnError(object):
         error_handler = HTTPSourceErrorHandler()
         error_handler.add_handler(500, (255, 0, 0), cacheable=False)
         error_handler.add_handler(204, (255, 0, 127, 200), cacheable=True)
-        self.source = TiledSource(self.grid, self.client, error_handler=error_handler)
+        self.source = TiledSource(client=self.client, grid=self.grid, error_handler=error_handler)
 
         with mock_httpd(
             TEST_SERVER_ADDRESS,

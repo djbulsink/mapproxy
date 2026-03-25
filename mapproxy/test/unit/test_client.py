@@ -350,11 +350,11 @@ class TestTileClient(object):
     def test_bbox(self):
         grid = tile_grid(4326)
         template = TileURLTemplate(TESTSERVER_URL + '/service?BBOX=%(bbox)s')
-        client = TileClient(template, grid=grid)
+        client = TileClient(template)
         with mock_httpd(TESTSERVER_ADDRESS, [({'path': '/service?BBOX=-180.00000000,0.00000000,-90.00000000,90.00000000'},  # noqa
                                               {'body': b'tile',
                                                'headers': {'content-type': 'image/png'}})]):
-            resp = client.get_tile((0, 1, 2)).image.read()
+            resp = client.get_tile((0, 1, 2), grid=grid).image.read()
             assert resp == b'tile'
 
 

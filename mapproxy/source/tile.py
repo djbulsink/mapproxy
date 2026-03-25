@@ -33,7 +33,7 @@ from mapproxy.layer import BlankImageError
 from mapproxy.extent import map_extent_from_grid
 from mapproxy.util.py import reraise_exception
 from mapproxy.query import MapQuery
-from mapproxy.util.coverage import Coverage
+from mapproxy.util.coverage import GeomCoverage
 
 import logging
 
@@ -44,10 +44,10 @@ log_config = logging.getLogger('mapproxy.config')
 class TiledSource(MapLayer):
     def __init__(
         self,
-        grid: Optional[TileGrid],
-        grids: Optional[list[TileGrid]],
         client: TileClient,
-        coverage: Optional[Coverage],
+        grid: Optional[TileGrid] = None,
+        grids: Optional[list[TileGrid]] = None,
+        coverage: Optional[GeomCoverage] = None,
         image_opts=None,
         error_handler=None,
         res_range=None
@@ -58,17 +58,14 @@ class TiledSource(MapLayer):
         self.client = client
         self.image_opts = image_opts or ImageOptions()
         self.coverage = coverage
-        self.extent = coverage.extent if coverage else map_extent_from_grid(grid)
+        self.extent = coverage.extent if coverage else map_extent_from_grid(grid or (grids[0] if grids else None))
         self.res_range = res_range
         self.error_handler = error_handler
 
     def get_map(self, query: MapQuery) -> BaseImageResult:
         # Get grid for query
-        grid: Optional[TileGrid] = self.grid
-        for g in self.grids:
-            if g.srs == query.srs:
-                grid = g
-                break
+        grid: TileGrid = next((g for g in self.grids if g.srs == query.srs), self.grid)
+        
         if grid is None:
             ex = InvalidSourceQuery(
                 'no grid with matching SRS for query: %r' % query.srs

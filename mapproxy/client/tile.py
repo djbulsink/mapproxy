@@ -15,32 +15,10 @@
 
 from typing import Optional
 
-from mapproxy.client.http import retrieve_image
+from mapproxy.client.http import HTTPClient, retrieve_image
 from mapproxy.grid import TileCoord
 from mapproxy.grid.tile_grid import TileGrid
 from mapproxy.image import ImageResult
-
-
-class TileClient(object):
-    def __init__(self, url_template, http_client=None, grid=None):
-        self.url_template: TileURLTemplate = url_template
-        self.http_client = http_client
-        self.grid = grid
-
-    def get_tile(
-        self,
-        tile_coord: TileCoord,
-        grid: Optional[TileGrid]=None,
-        format: str=None
-    ) -> ImageResult:
-        url = self.url_template.substitute(tile_coord, format, grid or self.grid)
-        if self.http_client:
-            return self.http_client.open_image(url)
-        else:
-            return retrieve_image(url)
-
-    def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.url_template)
 
 
 class TileURLTemplate(object):
@@ -99,6 +77,32 @@ class TileURLTemplate(object):
     def __repr__(self):
         return '%s(%r, format=%r)' % (
             self.__class__.__name__, self.template, self.format)
+
+
+class TileClient(object):
+    def __init__(self, url_template: TileURLTemplate, http_client: Optional[HTTPClient]=None):
+        self.url_template = url_template
+        self.http_client = http_client
+
+    def get_tile(
+        self,
+        tile_coord: TileCoord,
+        grid: Optional[TileGrid]=None,
+        format: str=None
+    ) -> ImageResult:
+        url = self.url_template.substitute(
+            tile_coord = tile_coord,
+            grid = grid,
+            format = format,
+        )
+
+        if self.http_client:
+            return self.http_client.open_image(url)
+        else:
+            return retrieve_image(url)
+
+    def __repr__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.url_template)
 
 
 def tilecache_path(tile_coord):

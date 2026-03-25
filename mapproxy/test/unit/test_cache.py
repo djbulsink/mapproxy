@@ -104,7 +104,7 @@ class TestTiledSourceGlobalGeodetic(object):
     def setup_method(self):
         self.grid = TileGrid(SRS(4326), bbox=[-180, -90, 180, 90])
         self.client = MockTileClient()
-        self.source = TiledSource(self.grid, self.client)
+        self.source = TiledSource(client=self.client, grid=self.grid)
 
     def test_match(self):
         self.source.get_map(MapQuery([-180, -90, 0, 90], (256, 256), SRS(4326)))
@@ -192,7 +192,7 @@ class TestTileManagerStaleTiles(object):
     def tile_mgr(self, file_cache, tile_locker):
         grid = TileGrid(SRS(4326), bbox=[-180, -90, 180, 90])
         client = MockTileClient()
-        source = TiledSource(grid, client)
+        source = TiledSource(client=client, grid=grid)
         tile_mgr = TileManager(grid, file_cache, [source], 'png', locker=tile_locker)
         return tile_mgr
 
@@ -214,7 +214,7 @@ class TestTileManagerRemoveTiles(object):
     def tile_mgr(self, file_cache, tile_locker):
         grid = TileGrid(SRS(4326), bbox=[-180, -90, 180, 90])
         client = MockTileClient()
-        source = TiledSource(grid, client)
+        source = TiledSource(client=client, grid=grid)
         image_opts = ImageOptions(format='image/png')
         return TileManager(grid, file_cache, [source], 'png',
                            image_opts=image_opts,
@@ -234,7 +234,7 @@ class TestTileManagerTiledSource(object):
     @pytest.fixture
     def tile_mgr(self, tile_locker, mock_file_cache, mock_tile_client):
         grid = TileGrid(SRS(4326), bbox=[-180, -90, 180, 90])
-        source = TiledSource(grid, mock_tile_client)
+        source = TiledSource(client=mock_tile_client, grid=grid)
         image_opts = ImageOptions(format='image/png')
         return TileManager(grid, mock_file_cache, [source], 'png',
                            image_opts=image_opts,
@@ -252,7 +252,7 @@ class TestTileManagerDifferentSourceGrid(object):
     def tile_mgr(self, mock_file_cache, mock_tile_client, tile_locker):
         grid = TileGrid(SRS(4326), bbox=[-180, -90, 180, 90])
         source_grid = TileGrid(SRS(4326), bbox=[0, -90, 180, 90])
-        source = TiledSource(source_grid, mock_tile_client)
+        source = TiledSource(client=mock_tile_client, grid=source_grid)
         image_opts = ImageOptions(format='image/png')
         return TileManager(grid, mock_file_cache, [source], 'png',
                            image_opts=image_opts,
